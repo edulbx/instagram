@@ -1,0 +1,31 @@
+from flask import Flask, render_template, url_for, request
+import requests
+from bs4 import BeautifulSoup
+import os
+
+template_dir = os.path.abspath(r'C:\Users\Eduardo\PycharmProjects\pythonProject\SITE INSTRAGRAM\static\themes\Meu tema 1')
+app = Flask(__name__, template_folder=template_dir, static_folder='static')
+
+@app.route('/')
+def index():
+    css_url = url_for('static', filename='themes/Meu tema 1/css/styles.css')
+    return render_template('index.html', css_url=css_url)
+
+@app.route('/', methods=['POST'])
+def download():
+    url = request.form['url']
+    response = requests.get(url)
+    if response.status_code != 200:
+        return 'Não foi possível acessar a página'
+    soup = BeautifulSoup(response.content, 'html.parser')
+    video = soup.find('meta', property='og:video')
+    if video is None:
+        return 'Não foi possível encontrar o vídeo'
+    video_url = video['content']
+    video_data = requests.get(video_url).content
+    with open('video.mp4', 'wb') as f:
+        f.write(video_data)
+    return 'Download completo'
+
+if __name__ == '__main__':
+    app.run(debug=True)
